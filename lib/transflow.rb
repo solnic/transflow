@@ -1,4 +1,6 @@
 require 'transproc'
+require 'wisper'
+
 require 'transflow/version'
 
 module Transflow
@@ -28,6 +30,34 @@ module Transflow
       handler.call(*args)
     end
     alias_method :[], :call
+
+    def method_missing(name, *args, &block)
+      if steps.include?(name)
+        steps[name]
+      else
+        super
+      end
+    end
+  end
+
+  class Publisher
+    include Wisper::Publisher
+
+    attr_reader :name
+
+    attr_reader :op
+
+    def initialize(name, op)
+      @name = name
+      @op = op
+    end
+
+    def call(*args)
+      result = op.call(*args)
+      broadcast(:"#{name}_success", result)
+      result
+    end
+    alias_method :[], :call
   end
 
   class StepDSL
@@ -39,9 +69,12 @@ module Transflow
 
     attr_reader :steps
 
+    attr_reader :publish
+
     def initialize(name, options, container, steps, &block)
       @name = name
       @handler = options.fetch(:with)
+      @publish = options.fetch(:publish, false)
       @container = container
       @steps = steps
       instance_exec(&block) if block
@@ -52,7 +85,16 @@ module Transflow
     end
 
     def call
-      steps[name] = container[handler]
+      operation = container[handler]
+
+      step =
+        if publish
+          Publisher.new(name, operation)
+        else
+          operation
+        end
+
+      steps[name] = step
     end
   end
 
