@@ -2,6 +2,22 @@ require 'transproc'
 require 'transflow/version'
 
 module Transflow
+  class Transaction
+    attr_reader :handler
+
+    attr_reader :steps
+
+    def initialize(steps, handler)
+      @steps = steps
+      @handler = handler
+    end
+
+    def call(*args)
+      handler.call(*args)
+    end
+    alias_method :[], :call
+  end
+
   class StepDSL
     attr_reader :name
 
@@ -24,7 +40,7 @@ module Transflow
     end
 
     def call
-      steps << [name, container[handler]]
+      steps[name] = container[handler]
     end
   end
 
@@ -38,7 +54,7 @@ module Transflow
     def initialize(options, &block)
       @options = options
       @container = options.fetch(:container)
-      @steps = []
+      @steps = {}
       instance_exec(&block)
     end
 
@@ -47,7 +63,7 @@ module Transflow
     end
 
     def call
-      steps.map(&:last).reverse.reduce(:>>)
+      Transaction.new(steps, steps.values.reverse.reduce(:>>))
     end
   end
 end
