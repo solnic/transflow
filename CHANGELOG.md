@@ -1,3 +1,12 @@
+# 0.0.3 2015-08-16
+
+## Added
+
+- Ability to pass aditional arguments to specific operations prior calling the
+  whole transaction (solnic)
+
+[Compare v0.0.2...v0.0.3](https://github.com/rom-rb/rom/compare/v0.0.2...v0.0.3)
+
 # 0.0.2 2015-08-16
 
 ## Added
