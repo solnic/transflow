@@ -3,4 +3,10 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in transflow.gemspec
 gemspec
 
-gem 'byebug', platforms: :mri
+group :test do
+  gem 'codeclimate-test-reporter', require: false, platforms: :rbx
+end
+
+group :tools do
+  gem 'byebug', platforms: :mri
+end
