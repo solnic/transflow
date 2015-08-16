@@ -28,8 +28,25 @@ module Transflow
       listeners.each { |step, listener| steps[step].subscribe(listener) }
     end
 
-    def call(*args)
-      handler.call(*args)
+    def call(input, options = {})
+      if options.any?
+        curried_handler = steps.map { |(name, op)|
+          args = options[name]
+
+          curried =
+            if args
+              op.curry.call(*args)
+            else
+              op
+            end
+
+          FlowDSL[curried]
+        }.reverse.reduce(:>>)
+
+        curried_handler.call(input)
+      else
+        handler.call(input)
+      end
     rescue Transproc::MalformedInputError => err
       raise TransactionFailedError.new(self, err)
     end
