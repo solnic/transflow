@@ -1,3 +1,5 @@
+require 'transproc'
+
 module Transflow
   class TransactionFailedError < StandardError
     attr_reader :transaction
@@ -15,13 +17,22 @@ module Transflow
   end
 
   class Transaction
-    attr_reader :handler
+    module Registry
+      extend Transproc::Registry
+    end
+
+    def self.[](op)
+      if op.respond_to?(:>>)
+        op
+      else
+        Registry[op]
+      end
+    end
 
     attr_reader :steps
 
-    def initialize(steps, handler)
+    def initialize(steps)
       @steps = steps
-      @handler = handler
     end
 
     def subscribe(listeners)
@@ -29,24 +40,22 @@ module Transflow
     end
 
     def call(input, options = {})
-      if options.any?
-        curried_handler = steps.map { |(name, op)|
-          args = options[name]
+      handler =
+        if options.any?
+          steps.map { |(name, op)|
+            args = options[name]
 
-          curried =
             if args
               op.curry.call(*args)
             else
               op
             end
+          }
+        else
+          steps.values
+        end.map(&method(:fn)).reverse.reduce(:>>)
 
-          FlowDSL[curried]
-        }.reverse.reduce(:>>)
-
-        curried_handler.call(input)
-      else
-        handler.call(input)
-      end
+      handler.call(input)
     rescue Transproc::MalformedInputError => err
       raise TransactionFailedError.new(self, err)
     end
@@ -54,6 +63,10 @@ module Transflow
 
     def to_s
       "Transaction(#{steps.keys.join(' => ')})"
+    end
+
+    def fn(obj)
+      self.class[obj]
     end
   end
 end

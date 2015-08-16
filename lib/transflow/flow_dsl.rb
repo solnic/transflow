@@ -1,22 +1,8 @@
-require 'transproc'
-
 require 'transflow/step_dsl'
 require 'transflow/transaction'
 
 module Transflow
   class FlowDSL
-    module Registry
-      extend Transproc::Registry
-    end
-
-    def self.[](op)
-      if op.respond_to?(:>>)
-        op
-      else
-        Registry[op]
-      end
-    end
-
     attr_reader :options
 
     attr_reader :container
@@ -35,11 +21,7 @@ module Transflow
     end
 
     def call
-      Transaction.new(steps, operations.reduce(:>>))
-    end
-
-    def operations
-      steps.values.reverse.map { |op| self.class[op] }
+      Transaction.new(steps)
     end
   end
 end
