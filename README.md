@@ -78,6 +78,10 @@ class Notify
   def persist_success(user)
     NOTIFICATIONS << "#{user} persisted"
   end
+
+  def persist_failure(user, err)
+    # do sth about that
+  end
 end
 
 my_business_flow = Transflow(container: container) do
