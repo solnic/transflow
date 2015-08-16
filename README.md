@@ -86,7 +86,7 @@ end
 
 notify = Notify.new
 
-my_business_flow.persist.subscribe(notify)
+my_business_flow.subscribe(persist: notify)
 
 my_business_flow[{ name: 'Jane' }]
 
