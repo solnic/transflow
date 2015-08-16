@@ -51,6 +51,52 @@ errors from multiple steps without stopping the processing. It's not implemented
 yet but *probably* using pub/sub for that will do the work as we can register an
 error listener that can simply gather errors and return it as a result.
 
+## Synopsis
+
+``` ruby
+DB = []
+
+container = {
+  validate: -> input { raise "name nil" if input[:name].nil? },
+  persist: -> input { DB << input[:name] }
+}
+
+my_business_flow = Transflow(container: container) do
+  step(:validate) { step(:persist) }
+end
+
+my_business_flow[{ name: 'Jane' }]
+
+puts DB.inspect
+# ["Jane"]
+
+## The same but with events
+
+NOTIFICATIONS = []
+
+class Notify
+  def persist_success(user)
+    NOTIFICATIONS << "#{user} persisted"
+  end
+end
+
+my_business_flow = Transflow(container: container) do
+  step(:validate) { step(:persist, publish: true) }
+end
+
+notify = Notify.new
+
+my_business_flow.persist.subscribe(notify)
+
+my_business_flow[{ name: 'Jane' }]
+
+puts DB.inspect
+# ["Jane"]
+
+puts NOTIFICATIONS.inspect
+# ["Jane persisted"]
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:
