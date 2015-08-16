@@ -10,7 +10,7 @@ module Transflow
       @transaction = transaction
       @original_error = original_error
 
-      super("#{transaction} failed")
+      super("#{transaction} failed [#{original_error.class}: #{original_error.message}]")
 
       set_backtrace(original_error.backtrace)
     end
@@ -46,7 +46,7 @@ module Transflow
             args = options[name]
 
             if args
-              op.curry.call(*args)
+              op.curry.call(args)
             else
               op
             end
@@ -57,7 +57,7 @@ module Transflow
 
       handler.call(input)
     rescue Transproc::MalformedInputError => err
-      raise TransactionFailedError.new(self, err)
+      raise TransactionFailedError.new(self, err.original_error)
     end
     alias_method :[], :call
 

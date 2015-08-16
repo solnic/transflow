@@ -4,7 +4,7 @@ RSpec.describe 'Injecting args into operations' do
 
     operations = {
       preprocess_input: -> input { { name: input['name'], email: input['email'] } },
-      validate_input: -> email, input { input[:email] == email ? input : raise('ops') },
+      validate_input: -> emails, input { emails.is_a?(Array) && emails.include?(input[:email]) ? input : raise('ops') },
       persist_input: -> input { Test::DB << input }
     }
 
@@ -18,9 +18,13 @@ RSpec.describe 'Injecting args into operations' do
 
     input = { 'name' => 'Jane', 'email' => 'jane@doe.org' }
 
-    transflow.(input, validate: 'jane@doe.org')
+    transflow.(input, validate: ['jane@doe.org'])
 
     expect(Test::DB).to include(name: 'Jane', email: 'jane@doe.org')
+
+    expect {
+      transflow.(input, validate: ['jade@doe.org'])
+    }.to raise_error(Transflow::TransactionFailedError, /RuntimeError: ops/)
   end
 end
 
