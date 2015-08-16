@@ -30,8 +30,8 @@ It is based on the following ideas:
   an output without causing any side-effects
 - the only interface of a an operation is `#call(input)`
 - each operation provides a meaningful functionality and can be reused
-- each operation can broadcast its result (TODO)
-- external message consumers can listen to a transaction object for specific events (TODO)
+- each operation can broadcast its result
+- external message consumers can listen to a transaction object for specific events
 
 ## Why?
 
