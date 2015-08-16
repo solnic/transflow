@@ -26,18 +26,14 @@ module Transflow
       @handler = handler
     end
 
+    def subscribe(listeners)
+      listeners.each { |step, listener| steps[step].subscribe(listener) }
+    end
+
     def call(*args)
       handler.call(*args)
     end
     alias_method :[], :call
-
-    def method_missing(name, *args, &block)
-      if steps.include?(name)
-        steps[name]
-      else
-        super
-      end
-    end
   end
 
   class Publisher

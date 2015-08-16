@@ -30,7 +30,7 @@ RSpec.describe 'Defining events for operations' do
       end
     end
 
-    transflow.persist.subscribe(email_notifier)
+    transflow.subscribe(persist: email_notifier)
 
     input = { 'name' => 'Jane', 'email' => 'jane@doe.org' }
 
