@@ -53,6 +53,12 @@ error listener that can simply gather errors and return it as a result.
 
 ## Synopsis
 
+Using Transflow is ridiculously simple as it doesn't make much assumptions about
+your code. You provide container with operations and they simply need to respond
+to `#call(input)` and return output or raise an error if something went wrong.
+
+### Defining a simple flow
+
 ``` ruby
 DB = []
 
@@ -69,17 +75,26 @@ my_business_flow[{ name: 'Jane' }]
 
 puts DB.inspect
 # ["Jane"]
+```
 
-## The same but with events
+## Defining a flow with event publishers
 
-NOTIFICATIONS = []
+In many cases an individual operation may require additional behavior to be
+triggered. This can be easily achieved with a pub/sub mechanism. Transflow
+provides that mechanism through the wonderful `wisper` gem which is used under
+the hood.
 
-class Notify
-  def persist_success(user)
+``` ruby
+DB = []
+
+NOTIFICATIONS = [] # just for the sake of the example
+
+class UserPersistListener
+  def self.persist_success(user)
     NOTIFICATIONS << "#{user} persisted"
   end
 
-  def persist_failure(user, err)
+  def self.persist_failure(user, err)
     # do sth about that
   end
 end
@@ -88,9 +103,7 @@ my_business_flow = Transflow(container: container) do
   step(:validate) { step(:persist, publish: true) }
 end
 
-notify = Notify.new
-
-my_business_flow.subscribe(persist: notify)
+my_business_flow.subscribe(persist: UserPersistListener)
 
 my_business_flow[{ name: 'Jane' }]
 
@@ -99,6 +112,41 @@ puts DB.inspect
 
 puts NOTIFICATIONS.inspect
 # ["Jane persisted"]
+```
+
+### Passing additional arguments
+
+Another common requirement is to pass aditional arguments that we don't have in
+the moment of defining our flow. Fortunately Transflow allows you to pass any
+arguments in the moment you call the transaction. Those arguments will be curried
+which means you must use either procs as your operation or an object that responds
+to `curry`. This limitation will be removed soon.
+
+``` ruby
+DB = []
+
+operations = {
+  preprocess_input: -> input { { name: input['name'], email: input['email'] } },
+  # let's say this one needs additional argument called `email`
+  validate_input: -> email, input { input[:email] == email ? input : raise('ops') },
+  persist_input: -> input { DB << input[:name] }
+}
+
+transflow = Transflow(container: operations) do
+  step :preprocess, with: :preprocess_input do
+    step :validate, with: :validate_input do
+      step :persist, with: :persist_input
+    end
+  end
+end
+
+input = { 'name' => 'Jane', 'email' => 'jane@doe.org' }
+
+# here we say "for `validate` operation curry this additional argument
+transflow[input, validate: 'jane@doe.org']
+
+puts DB.inspect
+# ["Jane"]
 ```
 
 ## Installation
