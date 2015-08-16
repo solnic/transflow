@@ -2,6 +2,18 @@ require 'transproc'
 require 'transflow/version'
 
 module Transflow
+  module Registry
+    extend Transproc::Registry
+  end
+
+  def self.[](op)
+    if op.respond_to?(:>>)
+      op
+    else
+      Registry[op]
+    end
+  end
+
   class Transaction
     attr_reader :handler
 
@@ -63,7 +75,11 @@ module Transflow
     end
 
     def call
-      Transaction.new(steps, steps.values.reverse.reduce(:>>))
+      Transaction.new(steps, operations.reduce(:>>))
+    end
+
+    def operations
+      steps.values.reverse.map { |op| Transflow[op] }
     end
   end
 end
