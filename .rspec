@@ -1,2 +1,4 @@
---format documentation
 --color
+--order random
+--warnings
+-r ./spec/spec_helper.rb
