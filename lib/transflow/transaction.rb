@@ -62,7 +62,7 @@ module Transflow
     alias_method :[], :call
 
     def to_s
-      "Transaction(#{steps.keys.join(' => ')})"
+      "Transaction(#{steps.keys.reverse.join(' => ')})"
     end
 
     def fn(obj)

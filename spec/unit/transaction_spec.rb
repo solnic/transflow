@@ -50,4 +50,12 @@ RSpec.describe Transflow::Transaction do
       end
     end
   end
+
+  describe '#to_s' do
+    it 'returns a string representation of a transaction' do
+      transaction = Transflow::Transaction.new(three: proc {}, two: proc {}, one: proc {})
+
+      expect(transaction.to_s).to eql('Transaction(one => two => three)')
+    end
+  end
 end
