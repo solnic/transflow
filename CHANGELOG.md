@@ -3,7 +3,7 @@
 ## Added
 
 - `Transaction#call` will raise if options include an unknown step name (solnic)
-- `Transflow` support shorter syntax for steps: `step :one, :two, :three` (solnic)
+- `Transflow` support shorter syntax for steps: `steps :one, :two, :three` (solnic)
 - `step(name)` defaults to `step(name, with: name)` (solnic)
 
 ## Fixed
