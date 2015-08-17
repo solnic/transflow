@@ -1,4 +1,4 @@
-RSpec.shared_context 'with steps accepting a kw args' do
+RSpec.shared_context 'with steps accepting kw args' do
   let(:step1) { -> i { { i: i, j: i + 1 } } }
   let(:step2) { -> i:, j: { i + j } }
   let(:step3) { -> i { i + 3 } }

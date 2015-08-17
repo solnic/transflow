@@ -1,3 +1,5 @@
+require_relative 'kw_args.rb' if RUBY_VERSION > '2.0.0'
+
 RSpec.describe Transflow::Transaction do
   subject(:transaction) { Transflow::Transaction.new(steps) }
 
@@ -34,11 +36,6 @@ RSpec.describe Transflow::Transaction do
       end
     end
 
-    if RUBY_VERSION > '2.0.0'
-      require_relative 'kw_args.rb'
-      include_context 'with steps accepting kw args'
-    end
-
     context 'with curry args' do
       let(:step1) { -> arr { arr.reduce(:+) } }
       let(:step2) { -> i, j { i + j } }
@@ -52,6 +49,8 @@ RSpec.describe Transflow::Transaction do
         expect { transaction[[1, 2], oops: 2] }.to raise_error(ArgumentError, /oops/)
       end
     end
+
+    include_context 'with steps accepting kw args' if RUBY_VERSION > '2.0.0'
   end
 
   describe '#to_s' do
