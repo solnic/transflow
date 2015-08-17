@@ -16,32 +16,97 @@ module Transflow
     end
   end
 
+  # Transaction encapsulates calling individual steps registered within a transflow
+  # constructor.
+  #
+  # It's responsible for calling steps in the right order and optionally currying
+  # arguments for specific steps.
+  #
+  # Furthermore you can subscribe event listeners to individual steps within a
+  # transaction.
+  #
+  # @api public
   class Transaction
+    # Internal function factory using Transproc extension
+    #
+    # @api private
     module Registry
       extend Transproc::Registry
     end
 
-    def self.[](op)
-      if op.respond_to?(:>>)
-        op
-      else
-        Registry[op]
-      end
-    end
-
+    # @attr_reader [Hash<Symbol => Proc,#call>] steps The step map
+    #
+    # @api private
     attr_reader :steps
 
+    # @attr_reader [Array<Symbol>] step_names The names of registered steps
+    #
+    # @api private
     attr_reader :step_names
 
+    # @api private
     def initialize(steps)
       @steps = steps
       @step_names = steps.keys.reverse
     end
 
+    # Subscribe event listeners to specific steps
+    #
+    # @example
+    #   transaction = Transflow(container: my_container) {
+    #     step(:one) { step(:two, publish: true }
+    #   }
+    #
+    #   class MyListener
+    #     def self.two_success(*args)
+    #       puts 'yes!'
+    #     end
+    #
+    #     def self.two_failure(*args)
+    #       puts 'oh noez!'
+    #     end
+    #   end
+    #
+    #   transaction.subscribe(two: my_listener)
+    #
+    #   transaction.call(some_input)
+    #
+    # @param [Hash<Symbol => Object>] listeners The step=>listener map
+    #
+    # @return [self]
+    #
+    # @api public
     def subscribe(listeners)
       listeners.each { |step, listener| steps[step].subscribe(listener) }
+      self
     end
 
+    # Call the transaction
+    #
+    # Once transaction is called it will call the first step and its result
+    # will be passed to the second step and so on.
+    #
+    # @example
+    #   my_container = {
+    #     add_one: -> i { i + 1 },
+    #     add_two: -> j { j + 2 }
+    #   }
+    #
+    #   transaction = Transflow(container: my_container) {
+    #     step(:one, with: :add_one) { step(:two, with: :add_two) }
+    #   }
+    #
+    #   transaction.call(1) # 4
+    #
+    # @param [Object] input The input for the first step
+    #
+    # @param [Hash] options The curry-args map, optional
+    #
+    # @return [Object]
+    #
+    # @raises TransactionFailedError
+    #
+    # @api public
     def call(input, options = {})
       handler =
         if options.any?
@@ -70,12 +135,28 @@ module Transflow
     end
     alias_method :[], :call
 
+    # Coerce a transaction into string representation
+    #
+    # @return [String]
+    #
+    # @api public
     def to_s
       "Transaction(#{step_names.join(' => ')})"
     end
 
+    private
+
+    # Wrap a proc into composable transproc function
+    #
+    # @param [#call]
+    #
+    # @api private
     def fn(obj)
-      self.class[obj]
+      if obj.respond_to?(:>>)
+        obj
+      else
+        Registry[obj]
+      end
     end
   end
 end
