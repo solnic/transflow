@@ -108,27 +108,7 @@ module Transflow
     #
     # @api public
     def call(input, options = {})
-      handler =
-        if options.any?
-          options.each_key do |name|
-            unless step_names.include?(name)
-              raise ArgumentError, "+#{name}+ is not a valid step name"
-            end
-          end
-
-          steps.map { |(name, op)|
-            args = options[name]
-
-            if args
-              op.curry.call(args)
-            else
-              op
-            end
-          }
-        else
-          steps.values
-        end.map(&method(:fn)).reverse.reduce(:>>)
-
+      handler = handler_steps(options).map(&method(:fn)).reduce(:>>)
       handler.call(input)
     rescue Transproc::MalformedInputError => err
       raise TransactionFailedError.new(self, err.original_error)
@@ -145,6 +125,34 @@ module Transflow
     end
 
     private
+
+    # @api private
+    def handler_steps(options)
+      if options.any?
+        assert_valid_options(options)
+
+        steps.map { |(name, op)|
+          args = options[name]
+
+          if args
+            op.curry.call(args)
+          else
+            op
+          end
+        }
+      else
+        steps.values
+      end.reverse
+    end
+
+    # @api private
+    def assert_valid_options(options)
+      options.each_key do |name|
+        unless step_names.include?(name)
+          raise ArgumentError, "+#{name}+ is not a valid step name"
+        end
+      end
+    end
 
     # Wrap a proc into composable transproc function
     #
