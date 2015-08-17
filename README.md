@@ -63,13 +63,11 @@ to `#call(input)` and return output or raise an error if something went wrong.
 DB = []
 
 container = {
-  validate: -> input { raise "name nil" if input[:name].nil? },
+  validate: -> input { input[:name].nil? ? raise("name nil") : input  },
   persist: -> input { DB << input[:name] }
 }
 
-my_business_flow = Transflow(container: container) do
-  step(:validate) { step(:persist) }
-end
+my_business_flow = Transflow(container: container) { steps :validate, :persist }
 
 my_business_flow[{ name: 'Jane' }]
 
