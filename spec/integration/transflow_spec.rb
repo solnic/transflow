@@ -63,4 +63,20 @@ RSpec.describe Transflow do
       end
     end
   end
+
+  context 'using short DSL' do
+    include_context 'a successful transaction'  do
+      let(:operations) do
+        {
+          preprocess: -> input { { name: input['name'], email: input['email'] } },
+          validate: -> input { input },
+          persist: -> input { Test::DB << input }
+        }
+      end
+
+      let(:transflow) do
+        Transflow(container: operations) { steps :preprocess, :validate, :persist }
+      end
+    end
+  end
 end

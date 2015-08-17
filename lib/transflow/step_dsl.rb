@@ -14,7 +14,7 @@ module Transflow
 
     def initialize(name, options, container, steps, &block)
       @name = name
-      @handler = options.fetch(:with)
+      @handler = options.fetch(:with, name)
       @publish = options.fetch(:publish, false)
       @container = container
       @steps = steps
