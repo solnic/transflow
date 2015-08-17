@@ -31,8 +31,11 @@ module Transflow
 
     attr_reader :steps
 
+    attr_reader :step_names
+
     def initialize(steps)
       @steps = steps
+      @step_names = steps.keys.reverse
     end
 
     def subscribe(listeners)
@@ -42,6 +45,12 @@ module Transflow
     def call(input, options = {})
       handler =
         if options.any?
+          options.each_key do |name|
+            unless step_names.include?(name)
+              raise ArgumentError, "+#{name}+ is not a valid step name"
+            end
+          end
+
           steps.map { |(name, op)|
             args = options[name]
 
@@ -62,7 +71,7 @@ module Transflow
     alias_method :[], :call
 
     def to_s
-      "Transaction(#{steps.keys.reverse.join(' => ')})"
+      "Transaction(#{step_names.join(' => ')})"
     end
 
     def fn(obj)
