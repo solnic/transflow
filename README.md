@@ -63,7 +63,7 @@ to `#call(input)` and return output or raise an error if something went wrong.
 DB = []
 
 container = {
-  validate: -> input { input[:name].nil? ? raise("name nil") : input  },
+  validate: -> input { input[:name].nil? ? raise(Transflow::StepError.new("name nil")) : input  },
   persist: -> input { DB << input[:name] }
 }
 
