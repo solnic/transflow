@@ -4,6 +4,8 @@ module Transflow
   class StepDSL
     attr_reader :name
 
+    attr_reader :options
+
     attr_reader :handler
 
     attr_reader :container
@@ -16,6 +18,7 @@ module Transflow
 
     def initialize(name, options, container, steps, &block)
       @name = name
+      @options = options
       @handler = options.fetch(:with, name)
       @publish = options.fetch(:publish, false)
       @monadic = options.fetch(:monadic, false)
@@ -24,8 +27,8 @@ module Transflow
       instance_exec(&block) if block
     end
 
-    def step(*args, &block)
-      self.class.new(*args, container, steps, &block).call
+    def step(name, new_options = {}, &block)
+      self.class.new(name, options.merge(new_options), container, steps, &block).call
     end
 
     def call

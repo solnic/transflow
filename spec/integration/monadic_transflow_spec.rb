@@ -16,8 +16,10 @@ RSpec.describe Transflow do
 
   let(:transflow) do
     Transflow(container: operations) do
-      step :validate, publish: true, monadic: true do
-        step :persist, monadic: true
+      monadic true
+
+      step :validate, publish: true do
+        step :persist
       end
     end
   end

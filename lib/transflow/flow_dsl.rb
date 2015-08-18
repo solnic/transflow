@@ -14,21 +14,35 @@ module Transflow
     attr_reader :step_map
 
     # @api private
+    attr_reader :step_options
+
+    # @api private
     def initialize(options, &block)
       @options = options
       @container = options.fetch(:container)
       @step_map = {}
+      @step_options = {}
       instance_exec(&block)
     end
 
-    # @api private
+    # @api public
     def steps(*names)
       names.reverse_each { |name| step(name) }
     end
 
-    # @api private
+    # @api public
     def step(name, options = {}, &block)
-      StepDSL.new(name, options, container, step_map, &block).call
+      StepDSL.new(name, step_options.merge(options), container, step_map, &block).call
+    end
+
+    # @api public
+    def monadic(value)
+      step_options.update(monadic: value)
+    end
+
+    # @api public
+    def publish(value)
+      step_options.update(publish: value)
     end
 
     # @api private

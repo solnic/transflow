@@ -75,7 +75,28 @@ RSpec.describe Transflow do
       end
 
       let(:transflow) do
-        Transflow(container: operations) { steps :preprocess, :validate, :persist }
+        Transflow(container: operations) do
+          publish true
+
+          steps :preprocess, :validate, :persist
+        end
+      end
+
+      it 'sets publish to true for all steps' do
+        listener = spy(:listener)
+
+        transflow.subscribe(preprocess: listener, validate: listener, persist: listener)
+
+        transflow['name' => 'Jane', 'email' => 'jane@doe.org']
+
+        expect(listener).to have_received(:preprocess_success)
+          .with(name: 'Jane', email: 'jane@doe.org')
+
+        expect(listener).to have_received(:validate_success)
+          .with(name: 'Jane', email: 'jane@doe.org')
+
+        expect(listener).to have_received(:persist_success)
+          .with(Test::DB)
       end
     end
   end
