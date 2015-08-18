@@ -30,6 +30,10 @@ module Transflow
           self.class.new(publisher, all_args)
         end
       end
+
+      def subscribe(*args)
+        publisher.subscribe(*args)
+      end
     end
 
     def initialize(name, op)

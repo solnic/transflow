@@ -24,5 +24,17 @@ RSpec.describe Transflow::Publisher do
         Transflow::Publisher.new(:step, op).curry
       }.to raise_error(/arity is < 0/)
     end
+
+    it 'triggers event listener' do
+      listener = spy(:listener)
+
+      op = -> i, j { i + j }
+      publisher = Transflow::Publisher.new(:step, op).curry
+
+      publisher.subscribe(listener)
+
+      expect(publisher.(1).(2)).to be(3)
+      expect(listener).to have_received(:step_success).with(3)
+    end
   end
 end
