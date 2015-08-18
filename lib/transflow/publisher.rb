@@ -73,7 +73,7 @@ module Transflow
       result = op.call(*args)
       broadcast_success(result)
       result
-    rescue => err
+    rescue StepError => err
       broadcast_failure(*args, err) and raise(err)
     end
     alias_method :[], :call

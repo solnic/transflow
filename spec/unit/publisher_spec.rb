@@ -61,12 +61,47 @@ RSpec.describe Transflow::Publisher do
   end
 
   describe '#call' do
+    context 'using exceptions' do
+      subject(:publisher) { Transflow::Publisher[:divide, op] }
+
+      let(:listener) { spy(:listener) }
+
+      context 'when step error is raised' do
+        let(:op) { -> i, j { j.zero? ? raise(Transflow::StepError, error) : i/j } }
+        let(:error) { "well, j was zero, sorry mate" }
+
+        it 'broadcasts failure' do
+          publisher.subscribe(listener)
+
+          expect {
+            expect(publisher.(4, 0).value).to eql(error.value)
+          }.to raise_error(Transflow::StepError, error)
+
+          expect(listener).to have_received(:divide_failure)
+        end
+      end
+
+      context 'when other error is raised' do
+        let(:op) { -> i, j { i/j } }
+
+        it 'broadcasts failure' do
+          publisher.subscribe(listener)
+
+          expect {
+            expect(publisher.(4, 0).value).to eql(error.value)
+          }.to raise_error(ZeroDivisionError)
+
+          expect(listener).to_not have_received(:divide_failure)
+        end
+      end
+    end
+
     context 'using monads' do
       subject(:publisher) { Transflow::Publisher[:divide, op, monadic: true] }
 
       let(:listener) { spy(:listener) }
 
-      let(:op) { -> i, j { j > 0 ? Right(i / j) : error } }
+      let(:op) { -> i, j { j.zero? ? error : Right(i / j) } }
       let(:error) { Left("well, j was zero, sorry mate") }
 
       it 'broadcasts success with Right result' do
