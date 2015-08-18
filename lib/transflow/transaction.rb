@@ -19,7 +19,7 @@ module Transflow
   class StepError < StandardError
     attr_reader :original_error
 
-    def initialize(input)
+    def initialize(input = nil)
       if input.kind_of?(StandardError)
         @original_error = input
         super(@original_error.message)

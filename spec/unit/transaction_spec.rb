@@ -67,6 +67,16 @@ RSpec.describe Transflow::Transaction do
         expect(listener).to have_received(:step2_success)
       end
     end
+
+    context 'when step error is raised' do
+      let(:step1) { -> i { i + 1 } }
+      let(:step2) { -> i { raise Transflow::StepError } }
+      let(:step3) { -> i { i + 3 } }
+
+      it 'raises transaction failed error' do
+        expect { transaction[1] }.to raise_error(Transflow::TransactionFailedError)
+      end
+    end
   end
 
   describe '#to_s' do
