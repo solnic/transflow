@@ -41,11 +41,11 @@ module Transflow
   #
   # @api public
   class Transaction
-    # Internal function factory using Transproc extension
+    # Step wrapper object which adds `>>` operator
     #
     # @api private
     class Step
-      include Dry::Pipeline
+      include Dry::Pipeline::Mixin
 
       # @api private
       def self.[](op)
