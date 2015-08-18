@@ -36,7 +36,7 @@ RSpec.describe Transflow do
           end
 
           def self.validate_input(input)
-            raise 'email nil' if input[:email].nil?
+            raise StepError.new(:validate_input, 'email nil') if input[:email].nil?
             input
           end
 

@@ -10,6 +10,8 @@ begin
   require 'byebug'
 rescue LoadError; end
 
+require 'transproc'
+
 module Test
   def self.remove_constants
     constants.each(&method(:remove_const))

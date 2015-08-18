@@ -53,7 +53,7 @@ RSpec.describe 'Defining events for operations' do
       {
         preprocess_input: -> input { { name: input['name'], email: input['email'] } },
         validate_input: -> input { input },
-        persist_input: -> input { raise ArgumentError, "OH NOEZ!" }
+        persist_input: -> input { raise Transflow::StepError.new(:persist_input, self) }
       }
     end
 
@@ -65,7 +65,7 @@ RSpec.describe 'Defining events for operations' do
       expect { transflow[input] }.to raise_error(Transflow::TransactionFailedError)
 
       expect(Test::SENT_EMAILS).to be_empty
-      expect(Test::ERRORS).to include("Jane - OH NOEZ!")
+      expect(Test::ERRORS).to include("Jane - persist_input step failed")
     end
   end
 end

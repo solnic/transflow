@@ -1,4 +1,4 @@
-require 'transproc'
+require 'dry-pipeline'
 
 module Transflow
   class TransactionFailedError < StandardError
@@ -16,6 +16,15 @@ module Transflow
     end
   end
 
+  class StepError < StandardError
+    attr_reader :step
+
+    def initialize(name, step)
+      super("#{name} step failed")
+      @step = step
+    end
+  end
+
   # Transaction encapsulates calling individual steps registered within a transflow
   # constructor.
   #
@@ -30,8 +39,17 @@ module Transflow
     # Internal function factory using Transproc extension
     #
     # @api private
-    module Registry
-      extend Transproc::Registry
+    class Step
+      include Dry::Pipeline
+
+      # @api private
+      def self.[](op)
+        if op.respond_to?(:>>)
+          op
+        else
+          Step.new(op)
+        end
+      end
     end
 
     # @attr_reader [Hash<Symbol => Proc,#call>] steps The step map
@@ -108,10 +126,10 @@ module Transflow
     #
     # @api public
     def call(input, options = {})
-      handler = handler_steps(options).map(&method(:fn)).reduce(:>>)
+      handler = handler_steps(options).map(&method(:step)).reduce(:>>)
       handler.call(input)
-    rescue Transproc::MalformedInputError => err
-      raise TransactionFailedError.new(self, err.original_error)
+    rescue StepError => err
+      raise TransactionFailedError.new(self, err)
     end
     alias_method :[], :call
 
@@ -159,12 +177,8 @@ module Transflow
     # @param [#call]
     #
     # @api private
-    def fn(obj)
-      if obj.respond_to?(:>>)
-        obj
-      else
-        Registry[obj]
-      end
+    def step(obj)
+      Step[obj]
     end
   end
 end
