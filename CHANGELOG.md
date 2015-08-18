@@ -1,3 +1,11 @@
+# 0.2.0 2015-08-18
+
+## Added
+
+- Support for currying a publisher step (solnic)
+
+[Compare v0.1.0...v0.2.0](https://github.com/solnic/transflow/compare/v0.1.0...v0.2.0)
+
 # 0.1.0 2015-08-17
 
 ## Added
