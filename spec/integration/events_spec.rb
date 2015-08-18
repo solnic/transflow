@@ -8,7 +8,7 @@ RSpec.describe 'Defining events for operations' do
       end
 
       def self.persist_failure(user, error)
-        Test::ERRORS << "#{user[:name]} - #{error.message} #{error.original_error.message}"
+        Test::ERRORS << "#{user[:name]} - #{error.message}"
       end
     }
   end
@@ -53,7 +53,13 @@ RSpec.describe 'Defining events for operations' do
       {
         preprocess_input: -> input { { name: input['name'], email: input['email'] } },
         validate_input: -> input { input },
-        persist_input: -> input { raise Transflow::StepError.new('oops', double(message: 'OH NOEZ')) }
+        persist_input: -> input do
+          begin
+            raise StandardError, 'OH NOEZ'
+          rescue => e
+            raise Transflow::StepError.new(e)
+          end
+      end
       }
     end
 
@@ -65,7 +71,7 @@ RSpec.describe 'Defining events for operations' do
       expect { transflow[input] }.to raise_error(Transflow::TransactionFailedError)
 
       expect(Test::SENT_EMAILS).to be_empty
-      expect(Test::ERRORS).to include("Jane - oops OH NOEZ")
+      expect(Test::ERRORS).to include("Jane - OH NOEZ")
     end
   end
 end
