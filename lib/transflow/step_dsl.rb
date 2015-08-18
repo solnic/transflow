@@ -12,10 +12,13 @@ module Transflow
 
     attr_reader :publish
 
+    attr_reader :monadic
+
     def initialize(name, options, container, steps, &block)
       @name = name
       @handler = options.fetch(:with, name)
       @publish = options.fetch(:publish, false)
+      @monadic = options.fetch(:monadic, false)
       @container = container
       @steps = steps
       instance_exec(&block) if block
@@ -30,7 +33,7 @@ module Transflow
 
       step =
         if publish
-          Publisher.new(name, operation)
+          Publisher[name, operation, monadic: monadic]
         else
           operation
         end

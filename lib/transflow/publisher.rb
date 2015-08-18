@@ -9,6 +9,16 @@ module Transflow
 
     attr_reader :op
 
+    def self.[](name, op, options = {})
+      type =
+        if options[:monadic]
+          Monadic
+        else
+          self
+        end
+      type.new(name, op)
+    end
+
     class Monadic < Publisher
       def call(*args)
         op.(*args)
