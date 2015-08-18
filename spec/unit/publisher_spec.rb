@@ -37,4 +37,31 @@ RSpec.describe Transflow::Publisher do
       expect(listener).to have_received(:step_success).with(3)
     end
   end
+
+  describe '#call' do
+    context 'using monads' do
+      subject(:publisher) { Transflow::Publisher::Monadic.new(:divide, op) }
+
+      let(:listener) { spy(:listener) }
+
+      let(:op) { -> i, j { j > 0 ? Right(i / j) : error } }
+      let(:error) { Left("well, j was zero, sorry mate") }
+
+      it 'broadcasts success with Right result' do
+        publisher.subscribe(listener)
+
+        expect(publisher.(4, 2).value).to be(2)
+
+        expect(listener).to have_received(:divide_success).with(2)
+      end
+
+      it 'broadcasts failure with Left result' do
+        publisher.subscribe(listener)
+
+        expect(publisher.(4, 0).value).to eql(error.value)
+
+        expect(listener).to have_received(:divide_failure).with(4, 0, error.value)
+      end
+    end
+  end
 end

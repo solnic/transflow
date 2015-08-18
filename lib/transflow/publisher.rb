@@ -1,4 +1,5 @@
 require 'wisper'
+require 'kleisli'
 
 module Transflow
   class Publisher
@@ -7,6 +8,14 @@ module Transflow
     attr_reader :name
 
     attr_reader :op
+
+    class Monadic < Publisher
+      def call(*args)
+        op.(*args)
+          .or { |result| broadcast_failure(*args, result) and Left(result) }
+          .>-> value { broadcast_success(value) and Right(value) }
+      end
+    end
 
     class Curried < Publisher
       attr_reader :publisher
@@ -52,12 +61,21 @@ module Transflow
 
     def call(*args)
       result = op.call(*args)
-      broadcast(:"#{name}_success", result)
+      broadcast_success(result)
       result
     rescue => err
-      broadcast(:"#{name}_failure", *args, err)
-      raise err
+      broadcast_failure(*args, err) and raise(err)
     end
     alias_method :[], :call
+
+    private
+
+    def broadcast_success(result)
+      broadcast(:"#{name}_success", result)
+    end
+
+    def broadcast_failure(*args, err)
+      broadcast(:"#{name}_failure", *args, err)
+    end
   end
 end
