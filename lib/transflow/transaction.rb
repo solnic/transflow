@@ -17,13 +17,10 @@ module Transflow
   end
 
   class StepError < StandardError
-    attr_reader :step
-
     attr_reader :original_error
 
-    def initialize(name, step, original_error = nil)
-      super("#{name} step failed")
-      @step = step
+    def initialize(msg, original_error = nil)
+      super(msg)
       @original_error = original_error
     end
   end

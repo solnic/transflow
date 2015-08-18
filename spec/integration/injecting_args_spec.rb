@@ -6,7 +6,7 @@ RSpec.describe 'Injecting args into operations' do
       preprocess_input: -> input { { name: input['name'], email: input['email'] } },
       validate_input: -> emails, input {
         emails.is_a?(Array) && emails.include?(input[:email]) ? input : raise(
-          Transflow::StepError.new(:validate_input, self))
+          Transflow::StepError.new('email unknown'))
       },
       persist_input: -> input { Test::DB << input }
     }
@@ -27,7 +27,7 @@ RSpec.describe 'Injecting args into operations' do
 
     expect {
       transflow.(input, validate: ['jade@doe.org'])
-    }.to raise_error(Transflow::TransactionFailedError, /StepError: validate_input step failed/)
+    }.to raise_error(Transflow::TransactionFailedError, /StepError: email unknown/)
   end
 end
 
