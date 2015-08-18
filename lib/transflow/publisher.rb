@@ -78,6 +78,10 @@ module Transflow
     end
     alias_method :[], :call
 
+    def subscribe(listeners, *args)
+      Array(listeners).each { |listener| super(listener, *args) }
+    end
+
     private
 
     def broadcast_success(result)

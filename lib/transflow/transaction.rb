@@ -100,7 +100,11 @@ module Transflow
     #
     # @api public
     def subscribe(listeners)
-      listeners.each { |step, listener| steps[step].subscribe(listener) }
+      if listeners.is_a?(Hash)
+        listeners.each { |step, listener| steps[step].subscribe(listener) }
+      else
+        steps.each { |(_, step)| step.subscribe(listeners) }
+      end
       self
     end
 

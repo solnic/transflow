@@ -38,9 +38,31 @@ RSpec.describe Transflow::Publisher do
     end
   end
 
+  describe '#subscribe' do
+    it 'subscribes one object' do
+      publisher = Transflow::Publisher.new(:step, -> {})
+      sub = double
+
+      publisher.subscribe(sub)
+
+      expect(publisher.listeners).to eql([sub])
+    end
+
+    it 'subscribes many objects' do
+      publisher = Transflow::Publisher.new(:step, -> {})
+
+      sub1 = double
+      sub2 = double
+
+      publisher.subscribe([sub1, sub2])
+
+      expect(publisher.listeners).to eql([sub1, sub2])
+    end
+  end
+
   describe '#call' do
     context 'using monads' do
-      subject(:publisher) { Transflow::Publisher::Monadic.new(:divide, op) }
+      subject(:publisher) { Transflow::Publisher[:divide, op, monadic: true] }
 
       let(:listener) { spy(:listener) }
 

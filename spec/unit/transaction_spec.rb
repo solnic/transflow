@@ -79,6 +79,49 @@ RSpec.describe Transflow::Transaction do
     end
   end
 
+  describe '#subscribe' do
+    let(:step1) { instance_double('Transflow::Publisher') }
+    let(:step2) { instance_double('Transflow::Publisher') }
+    let(:step3) { instance_double('Transflow::Publisher') }
+
+    it 'subscribes to individual steps' do
+      listener1 = double(:listener1)
+      listener3 = double(:listener3)
+
+      expect(step1).to receive(:subscribe).with(listener1)
+      expect(step2).to_not receive(:subscribe)
+      expect(step3).to receive(:subscribe).with(listener3)
+
+      transaction.subscribe(one: listener1, three: listener3)
+    end
+
+    it 'subscribes to all steps' do
+      listener = double(:listener)
+
+      expect(step1).to receive(:subscribe).with(listener)
+      expect(step2).to receive(:subscribe).with(listener)
+      expect(step3).to receive(:subscribe).with(listener)
+
+      transaction.subscribe(listener)
+    end
+
+    it 'subscribes many listeners to individual steps' do
+      listener11 = double(:listener11)
+      listener12 = double(:listener12)
+
+      listener31 = double(:listener31)
+      listener32 = double(:listener32)
+
+      expect(step1).to receive(:subscribe).with([listener11, listener12])
+
+      expect(step2).to_not receive(:subscribe)
+
+      expect(step3).to receive(:subscribe).with([listener31, listener32])
+
+      transaction.subscribe(one: [listener11, listener12], three: [listener31, listener32])
+    end
+  end
+
   describe '#to_s' do
     it 'returns a string representation of a transaction' do
       transaction = Transflow::Transaction.new(three: proc {}, two: proc {}, one: proc {})
