@@ -51,6 +51,22 @@ RSpec.describe Transflow::Transaction do
     end
 
     include_context 'with steps accepting kw args' if RUBY_VERSION > '2.0.0'
+
+    context 'with curried publisher step' do
+      let(:step1) { -> i { i + 1 } }
+      let(:step2) { Transflow::Publisher.new(:step2, -> i, j { i * j + 2 }) }
+      let(:step3) { -> i { i + 3 } }
+
+      let(:listener) { spy(:listener) }
+
+      it 'partially applies provided args for specific steps' do
+        result = transaction.subscribe(two: listener).call(1, two: 2)
+
+        expect(result).to be(9)
+
+        expect(listener).to have_received(:step2_success)
+      end
+    end
   end
 
   describe '#to_s' do
