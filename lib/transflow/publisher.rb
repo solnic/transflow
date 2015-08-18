@@ -1,6 +1,8 @@
 require 'wisper'
 require 'kleisli'
 
+require 'transflow/errors'
+
 module Transflow
   class Publisher
     include Wisper::Publisher
