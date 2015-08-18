@@ -1,3 +1,19 @@
+# 0.3.0 2015-08-19
+
+## Added
+
+- Support for steps that return [kleisli](https://github.com/txus/kleisli) monads (solnic)
+- Support for setting default step options via flow DSL (solnic)
+- Support for subscribing many listeners to a single step (solnic)
+- Support for subscribing one listener to all steps (solnic)
+
+## Changed
+
+- Now step objects are wrapped using `Step` decorator that uses `dry-pipeline` gem (solnic)
+- Only `Transflow::StepError` errors can cause transaction failure (solnic)
+
+[Compare v0.2.0...v0.3.0](https://github.com/solnic/transflow/compare/v0.2.0...v0.3.0)
+
 # 0.2.0 2015-08-18
 
 ## Added
