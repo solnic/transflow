@@ -44,13 +44,6 @@ handled by a pub/sub interface.
 It's a clean and simple way of encapsulating complex business logic in your application
 using simple, stateless objects.
 
-## Error Handling
-
-This will be the tricky part - there are scenarios where we need to aggregate
-errors from multiple steps without stopping the processing. It's not implemented
-yet but *probably* using pub/sub for that will do the work as we can register an
-error listener that can simply gather errors and return it as a result.
-
 ## Synopsis
 
 Using Transflow is ridiculously simple as it doesn't make much assumptions about
@@ -126,7 +119,7 @@ DB = []
 operations = {
   preprocess_input: -> input { { name: input['name'], email: input['email'] } },
   # let's say this one needs additional argument called `email`
-  validate_input: -> email, input { input[:email] == email ? input : raise('ops') },
+  validate_input: -> email, input { input[:email] == email ? input : raise(Transflow::StepError.new('ops')) },
   persist_input: -> input { DB << input[:name] }
 }
 
@@ -145,6 +138,44 @@ transflow[input, validate: 'jane@doe.org']
 
 puts DB.inspect
 # ["Jane"]
+```
+
+### Kleisli Integration
+
+You can use monads from [kleisli](https://github.com/txus/kleisli) gem in your
+steps to achieve a nice control-flow without exceptions:
+
+``` ruby
+
+DB = []
+
+validate = -> input do
+  if input[:email]
+    Right(input)
+  else
+    Left("what about the email?")
+  end
+end
+
+persist = -> input do
+  input.fmap do |values|
+    DB << values
+  end
+end
+
+container = { validate: validate, persist: persist }
+
+transflow = Transflow(container: container) do
+  monadic true
+
+  steps :validate, :persist
+end
+
+transflow[name: 'Jane', email: 'jane@doe.org']
+# Right([{:name=>"Jane", :email=>"jane@doe.org"}])
+
+transflow[name: 'Jane']
+# Left("what about the email?")
 ```
 
 ## Installation
