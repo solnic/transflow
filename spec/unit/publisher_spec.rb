@@ -8,6 +8,15 @@ RSpec.describe Transflow::Publisher do
       expect(publisher.(1).(2)).to be(3)
     end
 
+    it 'supports callable objects' do
+      op = Class.new { define_method(:call) { |i, j| i + j } }.new
+
+      publisher = Transflow::Publisher.new(:step, op).curry
+
+      expect(publisher.arity).to be(2)
+      expect(publisher.(1).(2)).to be(3)
+    end
+
     it 'raises error when arity is < 0' do
       op = -> *args { }
 
