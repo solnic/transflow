@@ -16,9 +16,7 @@ module Transflow
     # Step wrapper object which adds `>>` operator
     #
     # @api private
-    class Step
-      include Dry::Pipeline::Mixin
-
+    class Step < Dry::Pipeline
       # @api private
       def self.[](op)
         if op.respond_to?(:>>)
