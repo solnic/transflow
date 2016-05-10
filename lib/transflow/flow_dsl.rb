@@ -27,7 +27,7 @@ module Transflow
 
     # @api public
     def steps(*names)
-      names.reverse_each { |name| step(name) }
+      names.each { |name| step(name) }
     end
 
     # @api public

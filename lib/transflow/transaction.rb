@@ -39,8 +39,8 @@ module Transflow
 
     # @api private
     def initialize(steps)
-      @steps = steps
-      @step_names = steps.keys.reverse
+      @steps = Hash[steps.to_a.reverse]
+      @step_names = steps.keys
     end
 
     # Subscribe event listeners to specific steps
